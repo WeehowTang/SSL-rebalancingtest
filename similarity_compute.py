@@ -4,7 +4,7 @@ import seaborn as sns
 import os
 from scipy.signal import savgol_filter
 
-def simalirity(df, path1, path2, names, idx, beta, smooth:list):
+def simalirity(df, path1, names, idx, beta, smooth:list):
     def get_cos_similar_multi(v1, v2):
         num = np.dot(v1, v2.T)  # 向量点乘
         denom = np.linalg.norm(v1) * np.linalg.norm(v2, axis=1)  # 求模长的乘积
@@ -14,7 +14,6 @@ def simalirity(df, path1, path2, names, idx, beta, smooth:list):
     pathlist = os.listdir(path1)
     pixelslist = [os.path.join(path1, i) for i in pathlist]
     want_names = [key + '.npy' for key in names[idx]]
-    path2 = os.path.join(path2, 'similar_pixels_data.npy')
     Arrdata = np.ones((1, 224))
     for shortname, path_name in zip(pathlist, pixelslist):
         if shortname in want_names:
@@ -29,5 +28,4 @@ def simalirity(df, path1, path2, names, idx, beta, smooth:list):
         else:
             pass
     Traindata = Arrdata[1:, :]
-    np.save(path2, Traindata)
     return Traindata

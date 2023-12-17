@@ -1,10 +1,8 @@
 from selftrain import SelfLearningModel
 import numpy as np
 from imblearn.over_sampling import RandomOverSampler, SMOTE
-from imblearn.under_sampling import RandomUnderSampler
 
 class Reverse_sampling():
-
     def __init__(self, random_states):
         self.rs = random_states
         self.sample_indices_ = None
