@@ -13,69 +13,6 @@ from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.semi_supervised import LabelPropagation, LabelSpreading
 from sklearn.tree import DecisionTreeClassifier
-
-from heat_map_subplots import lda_learning_plot
-
-
-class TSVM(object):
-    '''
-    半监督TSVM
-    '''
-
-    def __init__(self, kernel='linear'):
-        self.Cl, self.Cu = 1.5, 0.001
-        self.kernel = kernel
-        self.clf = svm.SVC(C=1.5, kernel=self.kernel)
-
-    def train(self, X1, Y1, X2):
-        N = len(X1) + len(X2)
-        # 样本权值初始化
-        sample_weight = np.ones(N)
-        sample_weight[len(X1):] = self.Cu
-
-        # 用已标注部分训练出一个初始SVM
-        self.clf.fit(X1, Y1)
-
-        # 对未标记样本进行标记
-        Y2 = self.clf.predict(X2)
-        Y2 = Y2.reshape(-1, 1)
-
-        X = np.vstack([X1, X2])
-        Y = np.vstack([Y1, Y2])
-
-        # 未标记样本的序号
-        Y2_id = np.arange(len(X2))
-
-        while self.Cu < self.Cl:
-            # 重新训练SVM, 之后再寻找易出错样本不断调整
-            self.clf.fit(X, Y, sample_weight=sample_weight)
-            while True:
-                Y2_decision = self.clf.decision_function(X2)  # 参数实例到决策超平面的距离
-                Y2 = Y2.reshape(-1)
-                epsilon = 1 - Y2 * Y2_decision
-                negative_max_id = Y2_id[epsilon == min(epsilon)]
-                # print(epsilon[negative_max_id][0])
-                if epsilon[negative_max_id][0] > 0:
-                    # 寻找很可能错误的未标记样本，改变它的标记成其他标记
-                    pool = list(set(np.unique(Y1)) - set(Y2[negative_max_id]))
-                    Y2[negative_max_id] = random.choice(pool)
-                    Y2 = Y2.reshape(-1, 1)
-                    Y = np.vstack([Y1, Y2])
-
-                    self.clf.fit(X, Y, sample_weight=sample_weight)
-                else:
-                    break
-            self.Cu = min(2 * self.Cu, self.Cl)
-            sample_weight[len(X1):] = self.Cu
-
-    def score(self, X, Y):
-        return self.clf.score(X, Y)
-
-    def predict(self, X):
-        return self.clf.predict(X)
-
-
-# -*- coding: utf-8 -*-
 import numpy as np
 
 
@@ -163,15 +100,11 @@ def semi_kMeans(L, U, distMeas=distEclud, initial_centriod=newCent):
 
 
 if __name__ == '__main__':
-    from selftrain import SelfLearningModel, ss_GaussianMixtureModels
-    from sklearn.cross_decomposition import PLSRegression
-    from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
-    from sklearn.decomposition import PCA
+    from selftrain import SelfLearningModel
     from sklearn.neighbors import KNeighborsClassifier
     import pandas as pd
     from CARSPLSDA import PLS_DA
     from sklearn.semi_supervised import SelfTrainingClassifier
-    from semi_feature_selection import semi_RFC_params_tune
     from sklearn.metrics import classification_report, f1_score
     from nutrient_class import nutrient_classification
     from similarity_compute import simalirity
